@@ -23,7 +23,7 @@ public class ShrinkPoisonHelper
 
     private Action m_NoSafeAreaCallBack;
     //毒圈配置
-    private PoisonConfig m_PoisonConfig;
+    private BattleRoyaleAreaConfig m_PoisonConfig;
     private int m_CurrentLevel;
     //计时开始
     public bool isStart = false;
@@ -36,14 +36,14 @@ public class ShrinkPoisonHelper
     //配置缩圈速度
     private float configReduceRadiusSpeed = 0;
     private PoisonState m_poisonstate = PoisonState.Waiting;
-    public ShrinkPoisonHelper(Action<float, Vector2>poisonCircleChange, Action<float, Vector2> safeCircleChange,Action nosafeareaCallBack)
+    public ShrinkPoisonHelper(BattleRoyaleAreaConfig poisonconfig,Action<float, Vector2>poisonCircleChange, Action<float, Vector2> safeCircleChange,Action nosafeareaCallBack)
     {
         m_OutCircleChangeAction = poisonCircleChange;
         m_InCircleChangeAction = safeCircleChange;
         m_NoSafeAreaCallBack = nosafeareaCallBack;
         mPoint_outer = Vector2.zero;
         m_CurrentLevel = 0;
-        LoadConfig();
+        m_PoisonConfig = poisonconfig;
         ResetConfigData();
         InitPoisonAndSafeCircle();
         isStart = true;
@@ -92,25 +92,15 @@ public class ShrinkPoisonHelper
         {
             return;
         }
-        configDurationTime = m_PoisonConfig.listPosionData[m_CurrentLevel].Durationtime;
-        configReduceRadiusSpeed = m_PoisonConfig.listPosionData[m_CurrentLevel].ReduceRadiusOneSecond;
+        configDurationTime = m_PoisonConfig.ListPoisonData[m_CurrentLevel].Durationtime;
+        configReduceRadiusSpeed = m_PoisonConfig.ListPoisonData[m_CurrentLevel].ReduceRadiusOneSecond;
     }
     //获得当前等级的半径
     private int getCurrentLevelRadius()
     {
         if (loadConfigError)
             return 0;
-        return m_PoisonConfig.listPosionData[m_CurrentLevel].Radius;
-    }
-    private void LoadConfig()
-    {
-        PoisonConfig[] datas = Resources.FindObjectsOfTypeAll<PoisonConfig>();
-        m_PoisonConfig = datas[0];
-        if (m_PoisonConfig == null || m_PoisonConfig.listPosionData == null || m_PoisonConfig.listPosionData.Count < m_CurrentLevel)
-        {
-            loadConfigError = true;
-        }
-
+        return m_PoisonConfig.ListPoisonData[m_CurrentLevel].Radius;
     }
     //缩毒圈
     private void shrinkPoisonCirCleRadius()
@@ -153,7 +143,7 @@ public class ShrinkPoisonHelper
     /// </summary>
     private void refreshNewSafeCircle()
     {
-        if (m_CurrentLevel < m_PoisonConfig.listPosionData.Count - 1)
+        if (m_CurrentLevel < m_PoisonConfig.ListPoisonData.Count - 1)
         {
             upLevel();
             mRadius_inner = getCurrentLevelRadius();

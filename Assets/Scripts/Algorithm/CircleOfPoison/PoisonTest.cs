@@ -8,11 +8,12 @@ public class PoisonTest : MonoBehaviour
     public GizmosCircle Poison;
     public GizmosCircle Safe;
     private ShrinkPoisonHelper m_shrinkPoisonHelper;
+    public BattleRoyaleAreaConfig AreaConfig;
     // Start is called before the first frame update
     GUIStyle showstyle = new GUIStyle();
     void Start()
     {
-        m_shrinkPoisonHelper = new ShrinkPoisonHelper(OutCirCleChange, InCirCleChange, NoSafeAreaCallBack);
+        m_shrinkPoisonHelper = new ShrinkPoisonHelper(AreaConfig,OutCirCleChange, InCirCleChange, NoSafeAreaCallBack);
         showstyle.normal.textColor = Color.yellow;
         showstyle.fontSize = 40;
     }
