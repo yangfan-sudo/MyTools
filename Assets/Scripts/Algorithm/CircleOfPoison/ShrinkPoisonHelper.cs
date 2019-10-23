@@ -42,7 +42,7 @@ public class ShrinkPoisonHelper
         m_InCircleChangeAction = safeCircleChange;
         m_NoSafeAreaCallBack = nosafeareaCallBack;
         mPoint_outer = Vector2.zero;
-        m_CurrentLevel = 0;
+        m_CurrentLevel = 0;       
         m_PoisonConfig = poisonconfig;
         ResetConfigData();
         InitPoisonAndSafeCircle();
