@@ -3,11 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class ShrinkPoisonHelper
 {
     enum PoisonState
     {
-        Waiting,
+        stableTime,
+        preShrink,
         ShrinkageRing,
         End,
     }
@@ -35,65 +37,96 @@ public class ShrinkPoisonHelper
     private float configDurationTime = 0;
     //配置缩圈速度
     private float configReduceRadiusSpeed = 0;
-    private PoisonState m_poisonstate = PoisonState.Waiting;
-    public ShrinkPoisonHelper(BattleRoyaleAreaConfig poisonconfig,Action<float, Vector2>poisonCircleChange, Action<float, Vector2> safeCircleChange,Action nosafeareaCallBack)
+    //毒圈出现前等待时间
+    private float currentStableTime = 0;
+    //毒圈出现前等待时间
+    private float stableTimeConfig = 99999;
+
+    private PoisonState m_poisonstate = PoisonState.stableTime;
+    public ShrinkPoisonHelper(BattleRoyaleAreaConfig poisonconfig, Action<float, Vector2> poisonCircleChange, Action<float, Vector2> safeCircleChange, Action nosafeareaCallBack)
     {
         m_OutCircleChangeAction = poisonCircleChange;
         m_InCircleChangeAction = safeCircleChange;
         m_NoSafeAreaCallBack = nosafeareaCallBack;
-        mPoint_outer = Vector2.zero;
-        m_CurrentLevel = 0;       
+        mPoint_outer = new Vector2(poisonconfig.Mapcenter.x, poisonconfig.Mapcenter.z);
+        m_CurrentLevel = 0;
         m_PoisonConfig = poisonconfig;
-        ResetConfigData();
-        InitPoisonAndSafeCircle();
+        stableTimeConfig = m_PoisonConfig.StableTime;
         isStart = true;
+
     }
     private void InitPoisonAndSafeCircle()
     {
         mRadius_outer = getCurrentLevelRadius();
         refreshNewSafeCircle();
     }
-    public void Update()
+    public void Update(float dt)
     {
-        if(!isStart || loadConfigError|| m_poisonstate== PoisonState.End)
+        if (!isStart || loadConfigError || m_poisonstate == PoisonState.End)
         {
             return;
         }
-        switch(m_poisonstate)
+        switch (m_poisonstate)
         {
-            case PoisonState.Waiting:
-                WaitingState();
+            case PoisonState.stableTime:
+                stableTime(dt);
+                break;
+            case PoisonState.preShrink:
+                WaitingState(dt);
                 break;
             case PoisonState.ShrinkageRing:
                 shrinkPoisonCirCleRadius();
                 break;
-        }   
+        }
     }
-    private void WaitingState()
+    private void stableTime(float dt)
     {
-        if(curDurationTime>= configDurationTime)
+        if (currentStableTime >= stableTimeConfig)
+        {
+            m_poisonstate = PoisonState.preShrink;
+            currentStableTime = 0;
+            InitPoisonAndSafeCircle();
+        }
+        else
+        {
+            currentStableTime += dt;
+        }
+
+    }
+    private void WaitingState(float dt)
+    {
+        if (curDurationTime >= configDurationTime)
         {
             m_poisonstate = PoisonState.ShrinkageRing;
             curDurationTime = 0;
         }
         else
         {
-            curDurationTime += Time.deltaTime;
+            curDurationTime += dt;
         }
     }
     private void upLevel()
     {
         m_CurrentLevel++;
-        ResetConfigData();
+
     }
-    private void ResetConfigData()
+    private void ResetConfigData(bool haveNextData)
     {
-        if(loadConfigError)
+        if (loadConfigError || m_CurrentLevel == 0)
         {
             return;
         }
-        configDurationTime = m_PoisonConfig.ListPoisonData[m_CurrentLevel].Durationtime;
-        configReduceRadiusSpeed = m_PoisonConfig.ListPoisonData[m_CurrentLevel].ReduceRadiusOneSecond;
+        configDurationTime = m_PoisonConfig.ListPoisonData[m_CurrentLevel - 1].PreShrink;
+        if (haveNextData)
+        {
+            configReduceRadiusSpeed = (m_PoisonConfig.ListPoisonData[m_CurrentLevel - 1].Radius -
+                m_PoisonConfig.ListPoisonData[m_CurrentLevel].Radius) / m_PoisonConfig.ListPoisonData[m_CurrentLevel - 1].ShrinkTime;
+        }
+        else
+        {
+            configReduceRadiusSpeed = m_PoisonConfig.ListPoisonData[m_CurrentLevel - 1].Radius / m_PoisonConfig.ListPoisonData[m_CurrentLevel - 1].ShrinkTime;
+        }
+
     }
     //获得当前等级的半径
     private int getCurrentLevelRadius()
@@ -105,7 +138,7 @@ public class ShrinkPoisonHelper
     //缩毒圈
     private void shrinkPoisonCirCleRadius()
     {
-        mRadius_outer -= configReduceRadiusSpeed/30;
+        mRadius_outer -= configReduceRadiusSpeed / 30;
         if (!CircleMathfHelper.isIntersect(mPoint_outer, mRadius_outer, mPoint_inner, mRadius_inner))
         {
             m_OutCircleChangeAction?.Invoke(mRadius_outer, mPoint_outer);
@@ -130,10 +163,10 @@ public class ShrinkPoisonHelper
             {
                 m_OutCircleChangeAction?.Invoke(mRadius_outer, mPoint_outer);
                 refreshNewSafeCircle();
-                m_poisonstate = PoisonState.Waiting;
+                m_poisonstate = PoisonState.preShrink;
             }
         }
-        if(mRadius_outer<=0)
+        if (mRadius_outer < 1)
         {
             m_poisonstate = PoisonState.End;
         }
@@ -146,20 +179,25 @@ public class ShrinkPoisonHelper
         if (m_CurrentLevel < m_PoisonConfig.ListPoisonData.Count - 1)
         {
             upLevel();
+            ResetConfigData(true);
             mRadius_inner = getCurrentLevelRadius();
             mPoint_inner = CircleMathfHelper.PointOfRandom(mPoint_outer, mRadius_outer, mRadius_inner);
 
             m_InCircleChangeAction?.Invoke(mRadius_inner, mPoint_inner);
+            m_OutCircleChangeAction?.Invoke(mRadius_outer, mPoint_outer);
         }
         else
         {
             mRadius_inner = 0;
             mPoint_inner = mPoint_outer;
+            ResetConfigData(false);
             m_NoSafeAreaCallBack?.Invoke();
         }
+
     }
     public float GetLeftTime()
     {
         return configDurationTime - curDurationTime;
     }
 }
+

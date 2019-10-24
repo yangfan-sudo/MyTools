@@ -20,7 +20,7 @@ public class PoisonTest : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        m_shrinkPoisonHelper?.Update();
+        m_shrinkPoisonHelper?.Update(Time.deltaTime);
     }
     public void OutCirCleChange(float mRadius_outer,Vector2 mPoint_outer)
     {

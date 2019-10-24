@@ -7,10 +7,12 @@ using UnityEditor;
 public class BattleRoyaleAreaConfigEditor : Editor
 {
     private void GetProperties(SerializedObject serializedObject, out SerializedProperty centerPostion,
-        out SerializedProperty poisonConfig)
+        out SerializedProperty poisonConfig,out SerializedProperty stableTime,out SerializedProperty damageDuration)
     {
         centerPostion = serializedObject.FindProperty("m_Mapcenter");
         poisonConfig = serializedObject.FindProperty("m_ListPoisonData");
+        stableTime = serializedObject.FindProperty("m_StableTime");
+        damageDuration = serializedObject.FindProperty("m_damageDuration");
     }
     public override void OnInspectorGUI()
     {
@@ -22,22 +24,15 @@ public class BattleRoyaleAreaConfigEditor : Editor
         GUILayout.Space(5);
 
         serializedObject.ApplyModifiedProperties();
-        //TO DO 清除这个Texture缓存应该由更好的地方，或者Texture不缓存用某个固定的Texture
-        if(EditorApplication.isPlaying)
-        {
-            if(GUIStyleExtend.m_Caches.Count>0)
-            {
-                GUIStyleExtend.m_Caches.Clear();
-            }
-        }
-        
     }
     BattleRoyaleAreaConfig m_config;
     private void DrawBattleRoyaleAreaGUI()
     {
         m_config = target as BattleRoyaleAreaConfig;
-        GetProperties(serializedObject, out var centerPostion, out var poisonConfig);
+        GetProperties(serializedObject, out var centerPostion, out var poisonConfig, out var stableTime,out var damageDuration);
         EditorGUILayout.PropertyField(centerPostion, new GUIContent("地图中心点"));
+        EditorGUILayout.PropertyField(damageDuration, new GUIContent("伤害间隔"));
+        EditorGUILayout.PropertyField(stableTime, new GUIContent("安全区出现时间"));
         GUILayout.Space(5);
         var titleStyle = new GUIStyle(EditorStyles.boldLabel);
         titleStyle.fontSize = 20;
@@ -50,7 +45,6 @@ public class BattleRoyaleAreaConfigEditor : Editor
         {
             var element = poisonConfig.GetArrayElementAtIndex(i);
             Color color = Color.gray;
-
             if(i== lookIndex)
             {
                 color = new Color(0, 201, 255, 0.6f);
@@ -83,7 +77,7 @@ public class BattleRoyaleAreaConfigEditor : Editor
         }
         EditorGUILayout.EndVertical();
 
-        
+
 
 
     }
@@ -98,13 +92,15 @@ public class BattleRoyaleAreaConfigEditor : Editor
     private void DrawOnePoisonData(SerializedProperty element,Color color, out bool insert, out bool del,out bool look)
     {
         SerializedProperty radius = element.FindPropertyRelative("Radius");
-        SerializedProperty durationtime = element.FindPropertyRelative("Durationtime");
-        SerializedProperty reduceRadiusOneSecond = element.FindPropertyRelative("ReduceRadiusOneSecond");
+        SerializedProperty damageValue = element.FindPropertyRelative("DamageValue");
+        SerializedProperty preShrink = element.FindPropertyRelative("PreShrink");
+        SerializedProperty shrinkTime = element.FindPropertyRelative("ShrinkTime");
         EditorGUILayout.BeginHorizontal(GUIStyleExtend.ColorHelpBox(color));
         EditorGUILayout.BeginVertical();
         EditorGUILayout.PropertyField(radius, new GUIContent("半径"));
-        EditorGUILayout.PropertyField(durationtime, new GUIContent("等待缩圈时间"));
-        EditorGUILayout.PropertyField(reduceRadiusOneSecond, new GUIContent("缩圈速度"));
+        EditorGUILayout.PropertyField(damageValue, new GUIContent("圈外伤害"));
+        EditorGUILayout.PropertyField(preShrink, new GUIContent("等待缩圈时间"));
+        EditorGUILayout.PropertyField(shrinkTime, new GUIContent("缩圈时间"));
         EditorGUILayout.EndVertical();
         EditorGUILayout.BeginVertical();
         insert = GUILayout.Button(EditorGUIUtility.IconContent("Toolbar Plus"), GUILayout.Width(30));
@@ -118,8 +114,8 @@ public class BattleRoyaleAreaConfigEditor : Editor
     private int lookIndex = 0;
     private void HandleDrawBattleRoyaleAreaScene()
     {
-        GetProperties(serializedObject, out var centerPostion, out var poisonConfig);
-        Handles.color = Color.white;
+        GetProperties(serializedObject, out var centerPostion, out var poisonConfig,out var stableTime, out var damageDuration);
+        Handles.color = Color.red;
         HandlesDrawVector3(centerPostion);
         Handles.color = tmpcolor;
         if (poisonConfig.arraySize>0 )
