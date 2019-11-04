@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/UDPTest/Scene/UDPTest.unity
+    path: Assets/Scripts/AreaEtitor/Scene/AreaEditor.unity
     guid: fb9f2162a3dc60d42b0400c44a92e84f
   m_configObjects: {}

@@ -138,7 +138,8 @@ public class ShrinkPoisonHelper
     //缩毒圈
     private void shrinkPoisonCirCleRadius()
     {
-        mRadius_outer -= configReduceRadiusSpeed / 30;
+        float changeradius = configReduceRadiusSpeed / 60;
+        mRadius_outer -= changeradius;
         if (!CircleMathfHelper.isIntersect(mPoint_outer, mRadius_outer, mPoint_inner, mRadius_inner))
         {
             m_OutCircleChangeAction?.Invoke(mRadius_outer, mPoint_outer);
@@ -149,11 +150,11 @@ public class ShrinkPoisonHelper
             {
                 // k = y/x
                 // y = kx
-                // x^2+y^y = 1
+                // x^2+y^2 = changeradius^2
                 // x^2 = 1/(k^2+1)
                 float k = (mPoint_outer.y - mPoint_inner.y) / (mPoint_outer.x - mPoint_inner.x);
 
-                float x_off = 1 * (float)Mathf.Sqrt(1 / (k * k + 1));
+                float x_off = 1 * (float)Mathf.Sqrt((changeradius* changeradius) / (k * k + 1));
                 // k<0  x+x_off
                 mPoint_outer.x += 1 * (mPoint_outer.x < mPoint_inner.x ? 1 : -1) * x_off;
                 mPoint_outer.y = k * (mPoint_outer.x - mPoint_inner.x) + mPoint_inner.y;

@@ -25,13 +25,13 @@ public class PoisonTest : MonoBehaviour
     public void OutCirCleChange(float mRadius_outer,Vector2 mPoint_outer)
     {
         Poison.m_Radius = mRadius_outer;
-        Poison.transform.localPosition = new Vector3(mPoint_outer.x, 0, mPoint_outer.y);
+        Poison.transform.position = new Vector3(mPoint_outer.x, 0, mPoint_outer.y);
     }
     public void InCirCleChange(float mRadius_inner, Vector2 mPoint_inner)
     {
         Safe.gameObject.SetActive(true);
         Safe.m_Radius = mRadius_inner;
-        Safe.transform.localPosition = new Vector3(mPoint_inner.x, 0, mPoint_inner.y);
+        Safe.transform.position = new Vector3(mPoint_inner.x, 0, mPoint_inner.y);
     }
     public void NoSafeAreaCallBack()
     {
